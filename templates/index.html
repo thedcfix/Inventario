@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Inventario{% endblock %}
+
+{% block content %}
+<!-- Search & Filter bar -->
+<div class="search-bar mb-4">
+    <form method="GET" action="{{ url_for('index') }}" class="row g-2 align-items-end">
+        <div class="col-12 col-md-7">
+            <div class="input-group">
+                <input type="text" class="form-control" name="q" value="{{ current_search }}"
+                       placeholder="Cerca per nome o descrizione…" aria-label="Cerca">
+                {% if current_search %}
+                <a href="{{ url_for('index', category=current_category) }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" title="Cancella ricerca">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            </div>
+        </div>
+        <div class="col-12 col-md-5">
+            <select class="form-select" name="category" onchange="this.form.submit()">
+                <option value="">Tutte le categorie</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <p class="text-muted mb-0 small">
+        <i class="bi bi-collection me-1"></i>
+        <strong>{{ items|length }}</strong> oggett{{ 'o' if items|length == 1 else 'i' }}
+        {% if current_search %} per "<em>{{ current_search }}</em>"{% endif %}
+        {% if current_category %} in <span class="badge bg-primary-subtle text-primary">{{ current_category }}</span>{% endif %}
+    </p>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('export_excel', q=current_search, category=current_category) }}"
+           class="btn btn-sm btn-success" title="Scarica Excel">
+            <i class="bi bi-download"></i>
+        </a>
+        <span class="fw-semibold">
+            <i class="bi bi-currency-euro me-1 text-success"></i>
+            <span class="text-success">{{ "%.2f"|format(total_price) }} €</span>
+        </span>
+    </div>
+</div>
+
+{% if items %}
+<!-- Items grid -->
+<div class="row g-3">
+    {% for item in items %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <a href="{{ url_for('item_detail', item_id=item.id) }}" class="text-decoration-none">
+            <div class="card item-card h-100">
+                <div class="card-img-wrapper">
+                    {% if item.photo_url %}
+                    <img src="{{ item.photo_url }}" class="card-img-top" alt="{{ item.name }}">
+                    {% else %}
+                    <div class="card-img-placeholder">
+                        <i class="bi bi-image"></i>
+                    </div>
+                    {% endif %}
+                    <span class="badge bg-primary category-badge">{{ item.category }}</span>
+                </div>
+                <div class="card-body p-2 p-md-3">
+                    <h6 class="card-title mb-1 text-truncate">{{ item.name }}</h6>
+                    {% if item.description %}
+                    <p class="card-text text-muted small mb-1 text-truncate">{{ item.description }}</p>
+                    {% endif %}
+                    <div class="d-flex align-items-center gap-1 mt-auto flex-wrap">
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-boxes me-1"></i>{{ item.quantity }}
+                        </span>
+                        {% if item.price %}
+                        <span class="badge bg-success-subtle text-success border-0">
+                            <i class="bi bi-currency-euro me-1"></i>{{ "%.2f"|format(item.price|float) }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Empty state -->
+<div class="empty-state text-center py-5">
+    <div class="empty-illustration mb-4">
+        <i class="bi bi-inbox display-1"></i>
+    </div>
+    <h4 class="fw-semibold text-muted">Nessun oggetto trovato</h4>
+    <p class="text-muted">
+        {% if current_search or current_category %}
+        Prova a modificare i filtri di ricerca.
+        {% else %}
+        Inizia aggiungendo il tuo primo oggetto all'inventario.
+        {% endif %}
+    </p>
+    {% if not current_search and not current_category %}
+    <a href="{{ url_for('item_new') }}" class="btn btn-primary mt-2">
+        <i class="bi bi-plus-lg me-2"></i>Aggiungi oggetto
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- FAB (Floating Action Button) -->
+<a href="{{ url_for('item_new') }}" class="fab" title="Aggiungi oggetto">
+    <i class="bi bi-plus-lg"></i>
+</a>
+{% endblock %}

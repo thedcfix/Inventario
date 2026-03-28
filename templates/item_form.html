@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Modifica' if mode == 'edit' else 'Nuovo' }} oggetto — Inventario{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <!-- Header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="fw-bold mb-0">
+                {% if mode == 'edit' %}
+                <i class="bi bi-pencil-square me-2"></i>Modifica oggetto
+                {% else %}
+                <i class="bi bi-plus-circle me-2"></i>Nuovo oggetto
+                {% endif %}
+            </h4>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-3 p-md-4">
+                <form method="POST" enctype="multipart/form-data"
+                      action="{{ url_for('item_edit', item_id=item.id) if mode == 'edit' else url_for('item_new') }}">
+
+                    {% if error %}
+                    <div class="alert alert-warning py-2 small mb-3">
+                        <i class="bi bi-exclamation-circle-fill me-1"></i>{{ error }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Photo -->
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">
+                            <i class="bi bi-camera me-1"></i>Foto
+                        </label>
+                        <div class="photo-upload-area" id="photoUploadArea">
+                            <div class="photo-preview" id="photoPreview"
+                                 {% if mode == 'edit' and item.photo_url %}style="display:block"{% endif %}>
+                                <img id="previewImg"
+                                     src="{{ item.photo_url if mode == 'edit' and item.photo_url else '' }}"
+                                     alt="Anteprima">
+                                <button type="button" class="btn btn-sm btn-danger photo-remove" id="removePhoto"
+                                        title="Rimuovi foto">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <div class="photo-placeholder" id="photoPlaceholder"
+                                 {% if mode == 'edit' and item.photo_url %}style="display:none"{% endif %}>
+                                <i class="bi bi-camera-fill display-5 text-muted"></i>
+                                <p class="text-muted small mt-2 mb-0">Tocca per scattare o scegliere una foto</p>
+                            </div>
+                            <input type="file" class="d-none" id="photoInput" name="photo"
+                                   accept="image/*" capture="environment">
+                        </div>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-medium">
+                            <i class="bi bi-tag me-1"></i>Nome <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="name" name="name"
+                               value="{{ item.name if item.name is defined else (item.get('name', '') if item is mapping else '') }}"
+                               required placeholder="es. Laptop Dell XPS 15" maxlength="200">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-medium">
+                            <i class="bi bi-card-text me-1"></i>Descrizione
+                        </label>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="3" placeholder="Descrizione opzionale dell'oggetto…"
+                                  maxlength="2000">{{ item.description if item.description is defined else (item.get('description', '') if item is mapping else '') }}</textarea>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-3">
+                        <label for="category" class="form-label fw-medium">
+                            <i class="bi bi-folder me-1"></i>Categoria <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">Seleziona una categoria…</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}"
+                                {% if (item.category is defined and item.category == cat) or
+                                      (item is mapping and item.get('category', '') == cat) %}selected{% endif %}>
+                                {{ cat }}
+                            </option>
+                            {% endfor %}
+                            <option value="__new__">+ Nuova categoria…</option>
+                        </select>
+                        <div class="mt-2 d-none" id="newCategoryWrapper">
+                            <input type="text" class="form-control" id="new_category" name="new_category"
+                                   placeholder="Nome nuova categoria" maxlength="100">
+                        </div>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mb-3">
+                        <label for="price" class="form-label fw-medium">
+                            <i class="bi bi-currency-euro me-1"></i>Prezzo stimato (€)
+                        </label>
+                        <input type="number" class="form-control" id="price" name="price"
+                               value="{{ item.price if item.price is defined else (item.get('price', 0) if item is mapping else 0) }}"
+                               min="0" max="9999999.99" step="0.01" placeholder="0.00">
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="mb-4">
+                        <label for="quantity" class="form-label fw-medium">
+                            <i class="bi bi-boxes me-1"></i>Quantità
+                        </label>
+                        <div class="input-group quantity-stepper">
+                            <button type="button" class="btn btn-outline-secondary" id="qtyMinus">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" class="form-control text-center" id="quantity" name="quantity"
+                                   value="{{ item.quantity if item.quantity is defined else (item.get('quantity', 1) if item is mapping else 1) }}"
+                                   min="0" max="999999">
+                            <button type="button" class="btn btn-outline-secondary" id="qtyPlus">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if mode == 'edit' %}
+                            <i class="bi bi-check-lg me-2"></i>Salva modifiche
+                            {% else %}
+                            <i class="bi bi-plus-lg me-2"></i>Aggiungi oggetto
+                            {% endif %}
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Annulla</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+<script>
+// Category toggle
+document.getElementById('category').addEventListener('change', function () {
+    const wrapper = document.getElementById('newCategoryWrapper');
+    const input = document.getElementById('new_category');
+    if (this.value === '__new__') {
+        wrapper.classList.remove('d-none');
+        input.required = true;
+        input.focus();
+    } else {
+        wrapper.classList.add('d-none');
+        input.required = false;
+        input.value = '';
+    }
+});
+
+// Quantity stepper
+document.getElementById('qtyMinus').addEventListener('click', function () {
+    const input = document.getElementById('quantity');
+    const val = parseInt(input.value) || 0;
+    if (val > 0) input.value = val - 1;
+});
+document.getElementById('qtyPlus').addEventListener('click', function () {
+    const input = document.getElementById('quantity');
+    const val = parseInt(input.value) || 0;
+    input.value = val + 1;
+});
+</script>
+{% endblock %}

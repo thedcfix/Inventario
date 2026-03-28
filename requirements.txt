@@ -1,0 +1,7 @@
+Flask==3.1.*
+python-dotenv==1.1.*
+azure-cosmos==4.9.*
+azure-storage-blob==12.25.*
+gunicorn==23.0.*
+openpyxl==3.1.*
+Werkzeug==3.1.*

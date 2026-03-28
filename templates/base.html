@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📦</text></svg>" type="image/svg+xml">
+    <title>{% block title %}Inventario{% endblock %}</title>
+
+    <!-- Bootstrap 5.3 -->
+    <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    {% if session.get('logged_in') %}
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md fixed-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <div class="brand-icon">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <span class="brand-text">Inventario</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="d-none d-md-inline text-muted small">
+                    <i class="bi bi-person-circle me-1"></i>{{ session.get('username', '') }}
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm" title="Esci">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="d-none d-md-inline ms-1">Esci</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="container mt-2 {% if session.get('logged_in') %}main-content{% endif %}">
+
+        {% if error_code %}
+        <div class="text-center py-5">
+            <div class="error-illustration mb-4">
+                <i class="bi bi-emoji-frown display-1 text-muted"></i>
+            </div>
+            <h1 class="display-4 fw-bold text-muted">{{ error_code }}</h1>
+            <p class="lead text-muted">{{ error_msg }}</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+                <i class="bi bi-house-fill me-2"></i>Torna alla home
+            </a>
+        </div>
+        {% else %}
+        {% block content %}{% endblock %}
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
